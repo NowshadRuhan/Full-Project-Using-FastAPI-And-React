@@ -38,7 +38,14 @@ def get_db():
     finally:
         db.close()
 
-db_dependency = Annotated(Session, Depends(get_db))
+db_dependency = Annotated[Session, Depends(get_db)]
 
 models.Base.metadata.create_all(bind=engine)
 
+@app.post("/treansactions/", response_model=TransactionModel)
+async def create_transactions(transaction:TransactionBase, db:db_dependency):
+    db_transaction = models.Transaction(**transaction.dict())
+    db.add(db_transaction)
+    db.commit()
+    db.refresh(db_transaction)
+    return db_transaction
